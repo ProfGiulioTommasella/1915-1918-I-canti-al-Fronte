@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#14110c">
+  <title>1915-1918 · I Canti al Fronte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700;800&family=Black+Ops+One&family=Special+Elite&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/stile.css?v=1">
+</head>
+<body>
+  <div id="schermo">
+    <canvas id="scena" width="1280" height="720"></canvas>
+
+    <!-- Pannello della battaglia: fronte, tempo, nemici, arma -->
+    <aside id="pannello" class="nascosto">
+      <div class="logo">I Canti<br>al Fronte</div>
+      <div id="pan-battaglia"></div>
+      <div class="riquadro">
+        <div class="etichetta">Linea del fronte</div>
+        <div id="barra-fronte"><div id="barra-fronte-pieno"></div><span id="n-fronte"></span></div>
+      </div>
+      <div class="riquadro doppio">
+        <div><div class="etichetta">Tempo</div><div id="tempo" class="numero">1:15</div></div>
+        <div><div class="etichetta">Nemici</div><div id="nemici" class="numero">0</div></div>
+      </div>
+      <div class="riquadro" id="arma">
+        <div class="etichetta" id="arma-nome">Artiglieria</div>
+        <button id="btn-arma" aria-label="Prepara il colpo">
+          <img id="arma-img" alt="">
+          <img id="arma-conto" alt="">
+          <span id="arma-stato"></span>
+        </button>
+        <img id="arma-munizioni" alt="">
+        <div id="arma-azioni">
+          <button id="btn-ruota" class="piccolo" title="Ruota la zona (tasto R)">↻ Ruota</button>
+          <button id="btn-fuoco" class="piccolo rosso nascosto">FUOCO!</button>
+        </div>
+      </div>
+      <div id="pan-giocatore"><img id="pan-grado-img" alt=""><div><b id="pan-nome"></b><span id="pan-grado"></span></div></div>
+    </aside>
+
+    <!-- Pulsanti sempre visibili -->
+    <div id="comandi">
+      <button id="btn-istruzioni" class="tondo nascosto" aria-label="Istruzioni">📜</button>
+      <button id="btn-atmosfera" class="tondo" aria-label="Rumori di fondo">🎵</button>
+      <button id="btn-audio" class="tondo" aria-label="Effetti sonori">🔊</button>
+      <button id="btn-schermo" class="tondo" aria-label="Schermo intero">⛶</button>
+    </div>
+
+    <!-- Schermata titolo -->
+    <div id="titolo" class="pannello-pieno">
+      <button id="btn-start" aria-label="Inizia"><img src="assets/img/start.png?v=1" alt=""></button>
+    </div>
+
+    <!-- Nome del giocatore -->
+    <div id="arruolamento" class="nascosto">
+      <div class="foglio">
+        <div class="timbro">FOGLIO DI<br>ARRUOLAMENTO</div>
+        <label for="nome">Salve soldato, digitate pure il vostro nome:</label>
+        <input id="nome" maxlength="18" autocomplete="off" spellcheck="false" placeholder="Nome">
+        <div class="etichetta-gruppo">Come rispondere alle domande</div>
+        <div id="scelta-modo" role="group" aria-label="Modalità delle risposte">
+          <button data-modo="scelta">Scegliendo la risposta</button>
+          <button data-modo="scritta">Scrivendo la risposta</button>
+        </div>
+        <button id="btn-arruola" class="grande">ARRUOLATI ▶</button>
+      </div>
+    </div>
+
+    <!-- Dialoghi (ufficiale e soldato) -->
+    <div id="dialogo" class="nascosto">
+      <img id="dialogo-persona" alt="">
+      <div id="nuvola">
+        <div id="nuvola-chi"></div>
+        <div id="nuvola-testo"></div>
+        <div id="nuvola-azioni">
+          <button id="btn-salta-intro" class="piccolo nascosto">Salta ▶▶</button>
+          <button id="btn-nuvola" class="grande">Avanti</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diario di trincea: la scheda della categoria -->
+    <div id="diario" class="nascosto">
+      <div class="foglio diario">
+        <div class="diario-testa"><span id="diario-blocco"></span><span class="diario-data" id="diario-data"></span></div>
+        <h2 id="diario-titolo"></h2>
+        <ul id="diario-punti"></ul>
+        <p class="nota">Leggete con attenzione: subito dopo il soldato vi farà 4 domande.</p>
+        <button id="btn-diario" class="grande">Sono pronto ▶</button>
+      </div>
+    </div>
+
+    <!-- Domande del soldato -->
+    <div id="quiz" class="nascosto">
+      <div id="quiz-testa">
+        <div id="quiz-categoria"></div>
+        <div id="quiz-pallini"></div>
+      </div>
+      <img id="quiz-soldato" src="assets/img/soldato.png?v=1" alt="">
+      <div id="quiz-nuvola">
+        <div id="quiz-numero"></div>
+        <div id="quiz-domanda"></div>
+        <div id="quiz-scelte"></div>
+        <form id="quiz-scritta" class="nascosto" autocomplete="off">
+          <input id="quiz-input" maxlength="60" spellcheck="false" placeholder="Scrivete la risposta...">
+          <button class="piccolo" type="submit">Rispondi ▶</button>
+        </form>
+        <div id="quiz-esito" class="nascosto">
+          <div id="quiz-esito-titolo"></div>
+          <div id="quiz-esito-testo"></div>
+          <button id="btn-quiz-avanti" class="grande">Avanti</button>
+        </div>
+      </div>
+      <div id="quiz-munizioni"><img id="quiz-munizioni-img" alt=""><span id="quiz-munizioni-n"></span></div>
+    </div>
+
+    <!-- Grado raggiunto -->
+    <div id="grado" class="nascosto">
+      <img id="grado-img" alt="">
+      <div id="grado-testo"><div id="grado-sopra"></div><div id="grado-punti"></div></div>
+      <button id="btn-grado" class="grande">Avanti</button>
+    </div>
+
+    <!-- Banner di inizio battaglia e conto alla rovescia -->
+    <div id="banner" class="nascosto"><div id="banner-piccolo"></div><div id="banner-grande"></div></div>
+
+    <!-- Esito della battaglia -->
+    <div id="esito" class="nascosto">
+      <img id="esito-img" alt="">
+      <div id="esito-dati"></div>
+      <button id="btn-esito" class="grande">Avanti</button>
+    </div>
+
+    <!-- Report delle battaglie -->
+    <div id="report" class="nascosto">
+      <button id="btn-report" class="grande">Avanti</button>
+    </div>
+
+    <!-- Istruzioni -->
+    <div id="istruzioni" class="nascosto">
+      <div class="foglio istruzioni">
+        <h2>Istruzioni</h2>
+        <ol>
+          <li>Prima di ogni battaglia leggete il <b>diario di trincea</b> e rispondete alle <b>4 domande</b> del soldato.</li>
+          <li>Ogni risposta giusta vale una <b>munizione</b> per la battaglia e un <b>punto</b> per salire di grado (16 punti: Generale!).</li>
+          <li>In battaglia carri e aerei nemici avanzano verso la nostra linea del fronte, a destra. Se la raggiungono, il fronte cede un po'.</li>
+          <li>Toccate il <b>cannone</b> nel pannello, puntate la zona da colpire e <b>cliccate</b> (sul tablet: trascinate la zona e premete <b>FUOCO!</b>). Con <b>R</b> o ↻ si ruota la zona.</li>
+          <li>I colpi arrivano dopo qualche secondo: <b>mirate dove passerà il nemico</b>! Poi bisogna attendere la ricarica.</li>
+          <li>Si vince se il fronte resiste fino alla fine del tempo, o se nessun nemico resta in campo.</li>
+        </ol>
+        <button id="btn-chiudi-istruzioni" class="grande">Ho capito</button>
+      </div>
+    </div>
+
+    <!-- Finale e ripasso -->
+    <div id="finale" class="nascosto">
+      <div class="foglio finale">
+        <div id="finale-testa">
+          <img id="finale-grado-img" alt="">
+          <div>
+            <h2 id="finale-titolo"></h2>
+            <p id="finale-dati"></p>
+          </div>
+        </div>
+        <h3>Ripasso: le 4 categorie dei canti</h3>
+        <div id="finale-categorie"></div>
+        <div id="finale-date"></div>
+        <div id="finale-errori"></div>
+        <button id="btn-rigioca" class="grande">↻ GIOCA ANCORA</button>
+      </div>
+    </div>
+
+    <div id="firma">by prof. Giulio Tommasella</div>
+  </div>
+
+  <div id="ruota">
+    <div class="icona">📱↻</div>
+    <p>Ruota il dispositivo in orizzontale per giocare</p>
+  </div>
+
+  <script src="js/contenuti.js?v=1"></script>
+  <script src="js/grafica.js?v=1"></script>
+  <script src="js/gioco.js?v=1"></script>
+</body>
+</html>
