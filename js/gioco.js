@@ -67,7 +67,7 @@
     img[nome] = im;
     return im;
   }
-  const percorso = (nome) => `assets/img/${nome}.${nome.startsWith("sfondi/") ? "jpg" : "png"}?v=1`;
+  const percorso = (nome) => `assets/img/${nome}.${nome.startsWith("sfondi/") ? "jpg" : "png"}?v=2`;
   const pronta = (im) => im && im.complete && im.naturalWidth > 0;
   Object.keys(GRAFICA).forEach(immagine);
   ["titolo", "carta", "campo", "campo-nuvole", "trincea", "trincea-1", "trincea-2", "trincea-3", "fine",
@@ -287,18 +287,68 @@
     };
   }
   const gradoDa = (punti) => C.GRADI.reduce((r, gr) => (punti >= gr.minimo ? gr : r), C.GRADI[0]);
-  const sostituisci = (t, extra = {}) => t
-    .replace(/\{nome\}/g, g.nome)
-    .replace(/\{grado\}/g, gradoDa(g.punti).nome)
-    .replace(/\{punti\}/g, g.punti)
-    .replace(/\{(\w+)\}/g, (m, c) => (c in extra ? extra[c] : m));
+  const riempi = (testo, val) => testo.replace(/\{(\w+)\}/g, (m, c) => (c in val ? val[c] : m));
+  // {nome}, {grado} e {punti} del giocatore, più i valori dati
+  const valori = (val) => ({ nome: g.nome, grado: gradoDa(g.punti).nome, punti: g.punti, ...val });
+  const sostituisci = (t, val = {}) => riempi(t, valori(val));
+
+  // ---------------------------------------------------------------
+  //  Versione bilingue: l'italiano resta sempre, la traduzione va sotto
+  // ---------------------------------------------------------------
+  const LINGUE = { sq: "Shqip", es: "Español", zh: "中文" };
+  let lingua = leggi("caf-lingua", "");
+  if (!LINGUE[lingua] || typeof TRADUZIONI === "undefined") lingua = "";
+  function tr(it, val = {}) {
+    if (!lingua || !it) return "";
+    const t = TRADUZIONI[lingua][it];
+    if (!t) return "";
+    const v = valori(val);
+    // anche i valori si traducono (il grado, la categoria, l'arma), tranne il nome
+    for (const c in v) if (c !== "nome" && typeof v[c] === "string") v[c] = TRADUZIONI[lingua][v[c]] || v[c];
+    return riempi(t, v);
+  }
+  function aggiungiSpan(el, t) {
+    if (!t) return;
+    const sp = document.createElement("span");
+    sp.className = "trad";
+    sp.lang = lingua;
+    sp.textContent = t;
+    el.appendChild(sp);
+  }
+  const aggiungiTraduzione = (el, it, val = {}) => aggiungiSpan(el, tr(it, val));
+  // scrive in un elemento il testo italiano e, sotto, la traduzione
+  function scriviTesto(el, it, val = {}) {
+    el.textContent = sostituisci(it, val);
+    aggiungiTraduzione(el, it, val);
+  }
+  // come scriviTesto, ma in italiano i valori sono in grassetto
+  function scriviDati(el, it, val) {
+    const b = {};
+    for (const c in val) b[c] = `<b>${val[c]}</b>`;
+    el.innerHTML = sostituisci(it, b);
+    aggiungiTraduzione(el, it, val);
+  }
+  // la traduzione dentro un pezzo di HTML
+  const html = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const spanTr = (it, val) => { const t = tr(it, val); return t ? `<span class="trad" lang="${lingua}">${html(t)}</span>` : ""; };
+  // i testi fissi di index.html (con data-tr): la chiave è il loro HTML
+  const FISSI = [...document.querySelectorAll("[data-tr]")];
+  FISSI.forEach((el) => { el.dataset.it = el.innerHTML.trim(); });
+  function impostaLingua(l) {
+    lingua = LINGUE[l] ? l : "";
+    scrivi("caf-lingua", lingua);
+    document.body.classList.toggle("bilingue", !!lingua);
+    document.querySelectorAll("#scelta-lingua button").forEach((b) => b.classList.toggle("scelto", b.dataset.lingua === lingua));
+    FISSI.forEach((el) => { el.innerHTML = el.dataset.it; aggiungiTraduzione(el, el.dataset.it); });
+  }
+  document.querySelectorAll("#scelta-lingua button").forEach((b) => b.addEventListener("click", () => impostaLingua(b.dataset.lingua)));
 
   // sfondo disegnato sul canvas fuori dalla battaglia
   let sfondo = "sfondi/titolo";
   let effetto = "nessuno"; // "pioggia", "cenere" o "nessuno"
   let tSfondo = 0;
 
-  const PANNELLI = ["titolo", "arruolamento", "dialogo", "diario", "quiz", "grado", "banner", "esito", "report", "finale", "pannello"];
+  const PANNELLI = ["titolo", "arruolamento", "dialogo", "quiz", "grado", "banner", "esito", "report", "finale", "pannello"];
   function mostra(...quali) {
     PANNELLI.forEach((p) => $(p).classList.toggle("nascosto", !quali.includes(p)));
   }
@@ -369,8 +419,8 @@
     dialogo = { righe, i: 0, poi, scritte: 0, testo: "", ultimo: opzioni.ultimo || "Avanti" };
     const d = $("dialogo");
     d.classList.toggle("soldato", chi === "soldato");
-    $("dialogo-persona").src = chi === "soldato" ? "assets/img/soldato.png?v=1" : "assets/img/ufficiale.png?v=1";
-    $("nuvola-chi").textContent = chi === "soldato" ? "Il soldato" : "L'ufficiale";
+    $("dialogo-persona").src = chi === "soldato" ? "assets/img/soldato.png?v=2" : "assets/img/ufficiale.png?v=2";
+    scriviTesto($("nuvola-chi"), chi === "soldato" ? "Il soldato" : "L'ufficiale");
     $("btn-salta-intro").classList.toggle("nascosto", !opzioni.salta);
     mostra("dialogo");
     riga();
@@ -378,12 +428,13 @@
   function riga() {
     dialogo.testo = sostituisci(dialogo.righe[dialogo.i]);
     dialogo.scritte = 0;
-    $("btn-nuvola").textContent = dialogo.i === dialogo.righe.length - 1 ? dialogo.ultimo : "Avanti";
+    dialogo.finita = false;
+    scriviTesto($("btn-nuvola"), dialogo.i === dialogo.righe.length - 1 ? dialogo.ultimo : "Avanti");
     $("nuvola-testo").textContent = "";
   }
   function avantiDialogo() {
     if (!dialogo) return;
-    if (dialogo.scritte < dialogo.testo.length) { dialogo.scritte = dialogo.testo.length; return; }
+    if (!dialogo.finita) { dialogo.scritte = dialogo.testo.length; return; }
     dialogo.i++;
     if (dialogo.i >= dialogo.righe.length) {
       const poi = dialogo.poi;
@@ -402,9 +453,14 @@
     poi();
   });
   function scriviDialogo(dt) {
-    if (!dialogo || dialogo.scritte >= dialogo.testo.length) return;
+    if (!dialogo || dialogo.finita) return;
     dialogo.scritte = Math.min(dialogo.testo.length, dialogo.scritte + dt * 55);
     $("nuvola-testo").textContent = dialogo.testo.slice(0, Math.floor(dialogo.scritte));
+    if (dialogo.scritte >= dialogo.testo.length) {
+      // la traduzione compare quando la frase è scritta tutta
+      dialogo.finita = true;
+      aggiungiTraduzione($("nuvola-testo"), dialogo.righe[dialogo.i]);
+    }
   }
 
   function intro() {
@@ -428,32 +484,16 @@
   });
 
   // ---------------------------------------------------------------
-  //  Blocco: diario di trincea e domande del soldato
+  //  Blocco: le domande del soldato
   // ---------------------------------------------------------------
-  const DATE_DIARIO = ["24 maggio 1915", "agosto 1916", "novembre 1917", "ottobre 1918"];
   function blocco(i) {
     g.blocco = i;
-    const cat = C.CATEGORIE[i];
-    stato = "diario";
     document.body.classList.remove("battaglia");
-    sfondo = "sfondi/" + cat.sfondo;
+    sfondo = "sfondi/" + C.CATEGORIE[i].sfondo;
     effetto = i === 1 ? "nessuno" : i === 3 ? "cenere" : "pioggia";
     fondo("fronte-lontano");
-    $("diario-blocco").textContent = `Diario di trincea · ${i + 1}° blocco`;
-    $("diario-data").textContent = DATE_DIARIO[i];
-    $("diario-titolo").textContent = cat.nome;
-    $("diario-titolo").style.color = cat.colore;
-    const ul = $("diario-punti");
-    ul.innerHTML = "";
-    cat.scheda.forEach((t, j) => {
-      const li = document.createElement("li");
-      li.innerHTML = t;
-      li.style.animationDelay = `${0.3 + j * 0.45}s`;
-      ul.appendChild(li);
-    });
-    mostra("diario");
+    iniziaQuiz();
   }
-  $("btn-diario").addEventListener("click", () => { if (stato === "diario") iniziaQuiz(); });
 
   let quiz = null;
   function mescola(arr) {
@@ -469,14 +509,14 @@
     quiz = { n: 0, giuste: 0, risposte: [] };
     g.risposte[g.blocco] = quiz.risposte;
     mostra("quiz");
-    $("quiz-categoria").textContent = `${g.blocco + 1}° blocco · ${C.CATEGORIE[g.blocco].nome}`;
+    scriviTesto($("quiz-categoria"), "{n}° blocco · {categoria}", { n: g.blocco + 1, categoria: C.CATEGORIE[g.blocco].nome });
     aggiornaMunizioniQuiz();
     domanda();
   }
   function aggiornaMunizioniQuiz() {
     const arma = C.BATTAGLIE[g.blocco].arma;
-    $("quiz-munizioni-img").src = `assets/img/munizioni/${arma}-${quiz.giuste}.png?v=1`;
-    $("quiz-munizioni-n").textContent = `${quiz.giuste} ${quiz.giuste === 1 ? "salva" : "salve"} di ${arma}`;
+    $("quiz-munizioni-img").src = `assets/img/munizioni/${arma}-${quiz.giuste}.png?v=2`;
+    scriviTesto($("quiz-munizioni-n"), quiz.giuste === 1 ? "{n} salva di {arma}" : "{n} salve di {arma}", { n: quiz.giuste, arma });
     const p = $("quiz-pallini");
     p.innerHTML = "";
     for (let i = 0; i < 4; i++) {
@@ -489,9 +529,11 @@
   function domanda() {
     const d = C.DOMANDE[g.blocco][quiz.n];
     quiz.attesa = true;
-    const saluto = quiz.n === 0 ? sostituisci(C.TESTI.saluto) + " · " : "";
-    $("quiz-numero").textContent = `${saluto}Domanda ${quiz.n + 1} di 4`;
-    $("quiz-domanda").textContent = d.testo;
+    const numero = { n: quiz.n + 1 };
+    const saluto = quiz.n === 0 ? C.TESTI.saluto : "";
+    $("quiz-numero").textContent = (saluto ? sostituisci(saluto) + " · " : "") + sostituisci("Domanda {n} di 4", numero);
+    aggiungiSpan($("quiz-numero"), [tr(saluto), tr("Domanda {n} di 4", numero)].filter(Boolean).join(" · "));
+    scriviTesto($("quiz-domanda"), d.testo);
     $("quiz-esito").classList.add("nascosto");
     $("quiz-soldato").classList.remove("parla");
     void $("quiz-soldato").offsetWidth;
@@ -511,7 +553,7 @@
       ordine.forEach((i, pos) => {
         const b = document.createElement("button");
         b.innerHTML = `<span class="tasto">${pos + 1}</span><span></span>`;
-        b.lastChild.textContent = d.scelte[i];
+        scriviTesto(b.lastChild, d.scelte[i]);
         b.dataset.scelta = i;
         b.addEventListener("click", () => rispondi(i === d.giusta, b));
         box.appendChild(b);
@@ -553,11 +595,11 @@
       suona("vuoto", 0.7);
     }
     const t = $("quiz-esito-titolo");
-    t.textContent = giusta ? "Giusto! +1 munizione" : "Sbagliato";
+    scriviTesto(t, giusta ? "Giusto! +1 munizione" : "Sbagliato");
     t.className = giusta ? "giusta" : "sbagliata";
-    $("quiz-esito-testo").textContent = giusta ? d.bene : d.male;
+    scriviTesto($("quiz-esito-testo"), giusta ? d.bene : d.male);
     $("quiz-esito").classList.remove("nascosto");
-    $("btn-quiz-avanti").textContent = quiz.n === 3 ? "Fine domande" : "Avanti";
+    scriviTesto($("btn-quiz-avanti"), quiz.n === 3 ? "Fine domande" : "Avanti");
     quiz.n++;
     aggiornaMunizioniQuiz();
   }
@@ -585,12 +627,12 @@
   function mostraGrado(promosso) {
     stato = "grado";
     const gr = gradoDa(g.punti);
-    $("grado-img").src = `assets/img/gradi/${gr.img}.png?v=1`;
+    $("grado-img").src = `assets/img/gradi/${gr.img}.png?v=2`;
     $("grado-img").style.animation = "none";
     void $("grado-img").offsetWidth;
     $("grado-img").style.animation = "";
-    $("grado-sopra").textContent = promosso ? `Promosso! ${g.nome}, ora siete ${gr.nome}` : `${gr.nome} ${g.nome}`;
-    $("grado-punti").textContent = `${g.punti} ${g.punti === 1 ? "punto" : "punti"} su 16`;
+    scriviTesto($("grado-sopra"), promosso ? "Promosso! {nome}, ora siete {grado}" : "{grado} {nome}");
+    scriviTesto($("grado-punti"), g.punti === 1 ? "{p} punto su 16" : "{p} punti su 16", { p: g.punti });
     mostra("grado");
     suona("gradi", 0.8);
     clearTimeout(timerGrado);
@@ -655,14 +697,14 @@
     };
     fondo(def.tipo);
     mostra("pannello", "banner");
-    $("pan-battaglia").textContent = `${i + 1}ª battaglia · ${def.tipo === "carri" ? "carri armati" : "aerei"}`;
-    $("arma-nome").textContent = def.arma === "artiglieria" ? "Artiglieria" : "Contraerea";
-    $("arma-img").src = `assets/img/${def.arma}.png?v=1`;
+    scriviTesto($("pan-battaglia"), def.tipo === "carri" ? "{n}ª battaglia · carri armati" : "{n}ª battaglia · aerei", { n: i + 1 });
+    scriviTesto($("arma-nome"), def.arma === "artiglieria" ? "Artiglieria" : "Contraerea");
+    $("arma-img").src = `assets/img/${def.arma}.png?v=2`;
     const gr = gradoDa(g.punti);
-    $("pan-grado-img").src = `assets/img/gradi/${gr.img}.png?v=1`;
+    $("pan-grado-img").src = `assets/img/gradi/${gr.img}.png?v=2`;
     $("pan-nome").textContent = g.nome;
-    $("pan-grado").textContent = gr.nome;
-    $("banner-piccolo").textContent = def.titolo;
+    scriviTesto($("pan-grado"), gr.nome);
+    scriviTesto($("banner-piccolo"), def.titolo);
     $("banner-grande").textContent = "";
     aggiornaPannello();
   }
@@ -678,21 +720,21 @@
     $("tempo").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
     $("tempo").classList.toggle("poco", s <= 10);
     $("nemici").textContent = B.totale - B.distrutti - B.arrivati;
-    $("arma-munizioni").src = `assets/img/munizioni/${B.def.arma}-${Math.min(4, B.munizioni)}.png?v=1`;
+    $("arma-munizioni").src = `assets/img/munizioni/${B.def.arma}-${Math.min(4, B.munizioni)}.png?v=2`;
     const btn = $("btn-arma");
     btn.className = B.arma;
     const st = $("arma-stato");
-    if (B.arma === "pronta") st.textContent = "PRONTA · TOCCA";
-    else if (B.arma === "mira") st.textContent = "SCEGLI LA ZONA";
-    else if (B.arma === "attesa") {
+    const scritta = { pronta: "PRONTA · TOCCA", mira: "SCEGLI LA ZONA", scarica: "SCARICA" }[B.arma];
+    if (scritta && st.dataset.it !== scritta) { st.dataset.it = scritta; scriviTesto(st, scritta); }
+    if (B.arma === "attesa") {
       const r = Math.max(0, B.ricaricaFine - B.t);
       // le cifre del conto alla rovescia dello Scratch (da 18 a 1)
       const n = String(limita(Math.ceil(r), 1, 18)).padStart(2, "0");
       if ($("arma-conto").dataset.n !== n) {
         $("arma-conto").dataset.n = n;
-        $("arma-conto").src = `assets/img/conto/${n}.png?v=1`;
+        $("arma-conto").src = `assets/img/conto/${n}.png?v=2`;
       }
-    } else st.textContent = "SCARICA";
+    }
     $("btn-fuoco").classList.toggle("nascosto", !(B.arma === "mira" && B.mira && toccoUsato));
     $("btn-ruota").disabled = B.arma !== "mira";
   }
@@ -835,7 +877,7 @@
     }
     if (!B.iniziata) {
       B.iniziata = true;
-      $("banner-grande").textContent = "FUOCO!";
+      scriviTesto($("banner-grande"), "FUOCO!");
       setTimeout(() => { if (stato === "battaglia") $("banner").classList.add("nascosto"); }, 900);
     }
 
@@ -958,10 +1000,20 @@
     g.vinteQuali[B.i] = vinta;
     fondo(null);
     suona(vinta ? "vittoria" : "sconfitta", 0.9);
-    $("banner-piccolo").textContent = vinta ? "Il fronte ha retto!" : "Il fronte è stato sfondato...";
-    $("banner-grande").textContent = vinta ? "BATTAGLIA VINTA" : "BATTAGLIA PERSA";
+    scriviTesto($("banner-piccolo"), vinta ? "Il fronte ha retto!" : "Il fronte è stato sfondato...");
+    scriviTesto($("banner-grande"), vinta ? "BATTAGLIA VINTA" : "BATTAGLIA PERSA");
     $("banner").classList.remove("nascosto");
     setTimeout(esito, 2600);
+  }
+
+  // una riga per dato, ognuna con la sua traduzione
+  function righeDati(el, righe) {
+    el.innerHTML = "";
+    righe.forEach(([it, val]) => {
+      const r = document.createElement("div");
+      scriviDati(r, it, val);
+      el.appendChild(r);
+    });
   }
 
   function esito() {
@@ -969,12 +1021,14 @@
     stato = "esito";
     document.body.classList.remove("battaglia");
     const nome = `${B.def.tipo === "carri" ? "carri" : "aerea"}-${B.vinta ? "vinta" : "persa"}`;
-    $("esito-img").src = `assets/img/sfondi/${nome}.jpg?v=1`;
-    $("esito-dati").innerHTML =
-      `${B.def.tipo === "carri" ? "Carri" : "Aerei"} distrutti: <b>${B.distrutti}</b> su ${B.totale}<br>` +
-      `Hanno raggiunto il fronte: <b>${B.arrivati}</b><br>` +
-      `Linea del fronte: <b>${Math.max(0, Math.round((B.fronte / B.def.fronte) * 100))}%</b>`;
-    $("btn-esito").textContent = B.i < 3 ? "Avanti ▶" : "Rapporto finale ▶";
+    $("esito-img").src = `assets/img/sfondi/${nome}.jpg?v=2`;
+    $("esito").style.backgroundImage = `url("assets/img/sfondi/${nome}.jpg?v=2")`;
+    righeDati($("esito-dati"), [
+      [B.def.tipo === "carri" ? "Carri distrutti: {d} su {t}" : "Aerei distrutti: {d} su {t}", { d: B.distrutti, t: B.totale }],
+      ["Hanno raggiunto il fronte: {n}", { n: B.arrivati }],
+      ["Linea del fronte: {p}%", { p: Math.max(0, Math.round((B.fronte / B.def.fronte) * 100)) }],
+    ]);
+    scriviTesto($("btn-esito"), B.i < 3 ? "Avanti ▶" : "Rapporto finale ▶");
     mostra("esito");
   }
   $("btn-esito").addEventListener("click", () => {
@@ -1090,21 +1144,27 @@
     stato = "finale";
     sfondo = "sfondi/carta";
     const gr = gradoDa(g.punti);
-    $("finale-grado-img").src = `assets/img/gradi/${gr.img}.png?v=1`;
-    $("finale-titolo").textContent = `${gr.nome} ${g.nome}`;
-    $("finale-dati").innerHTML =
-      `Punteggio finale: <b>${g.punti}</b> su 16<br>` +
-      `Battaglie vinte: <b>${g.vinte}</b> su 4 · Mezzi nemici distrutti: <b>${g.distrutti}</b>`;
+    $("finale-grado-img").src = `assets/img/gradi/${gr.img}.png?v=2`;
+    scriviTesto($("finale-titolo"), "{grado} {nome}");
+    righeDati($("finale-dati"), [
+      ["Punteggio finale: {p} su 16", { p: g.punti }],
+      ["Battaglie vinte: {v} su 4 · Mezzi nemici distrutti: {d}", { v: g.vinte, d: g.distrutti }],
+    ]);
     $("finale-categorie").innerHTML = C.CATEGORIE.map((c) =>
-      `<div class="cat" style="--c:${c.colore}"><h4>${c.nome}</h4><ul>${c.scheda.map((t) => `<li>${t}</li>`).join("")}</ul></div>`).join("");
-    $("finale-date").innerHTML = C.DATE.map(([d, t]) => `<div><b>${d}</b>${t}</div>`).join("");
+      `<div class="cat" style="--c:${c.colore}"><h4>${c.nome}${spanTr(c.nome)}</h4>` +
+      `<ul>${c.scheda.map((t) => `<li>${t}${spanTr(t)}</li>`).join("")}</ul></div>`).join("");
+    $("finale-date").innerHTML = C.DATE.map(([d, t]) => `<div><b>${d}${spanTr(d)}</b>${t}${spanTr(t)}</div>`).join("");
     const errori = [];
     g.risposte.forEach((r) => (r || []).forEach(({ giusta, d }) => {
-      if (!giusta) errori.push(`<li>${d.testo} <em>${d.scelte[d.giusta]}</em></li>`);
+      if (giusta) return;
+      const risposta = d.scelte[d.giusta];
+      const t = tr(d.testo);
+      errori.push(`<li>${d.testo} <em>${risposta}</em>` +
+        (t ? `<span class="trad" lang="${lingua}">${html(t)} <em>${html(tr(risposta) || risposta)}</em></span>` : "") + "</li>");
     }));
     $("finale-errori").innerHTML = errori.length
-      ? `<h3>Da ripassare</h3><ul>${errori.join("")}</ul>`
-      : "<h3>Nessun errore: complimenti!</h3>";
+      ? `<h3>Da ripassare${spanTr("Da ripassare")}</h3><ul>${errori.join("")}</ul>`
+      : `<h3>Nessun errore: complimenti!${spanTr("Nessun errore: complimenti!")}</h3>`;
     mostra("finale");
     $("finale").scrollTop = 0;
     fondo("fronte-lontano");
@@ -1130,7 +1190,6 @@
     }
     if (stato === "titolo" && (key === "enter" || key === " ")) $("btn-start").click();
     else if (stato === "dialogo" && (key === "enter" || key === " ")) { e.preventDefault(); avantiDialogo(); }
-    else if (stato === "diario" && key === "enter") $("btn-diario").click();
     else if (stato === "quiz") {
       if (quiz && quiz.attesa && /^[1-4]$/.test(key)) {
         const b = document.querySelectorAll("#quiz-scelte button")[Number(key) - 1];
@@ -1180,7 +1239,7 @@
         ctx.drawImage(im, (W - w) / 2 + ox, oy, w, h);
       }
     }
-    if (stato === "quiz" || stato === "diario" || stato === "dialogo" || stato === "arruolamento") {
+    if (stato === "quiz" || stato === "dialogo" || stato === "arruolamento") {
       // vignettatura per leggere meglio
       const gr = ctx.createRadialGradient(W / 2, H / 2, 200, W / 2, H / 2, 820);
       gr.addColorStop(0, "rgba(0,0,0,0.05)");
@@ -1451,7 +1510,9 @@
   // ---------------------------------------------------------------
   //  Avvio (index.html#battaglia=2 per provare subito una battaglia, #blocco=3 per un blocco)
   // ---------------------------------------------------------------
+  impostaLingua(lingua);
   const prova = new URLSearchParams(location.hash.slice(1));
+  if (prova.has("lingua")) impostaLingua(prova.get("lingua"));
   if (prova.has("battaglia") || prova.has("blocco")) {
     g.nome = g.nome || "Prova";
     g.punti = Number(prova.get("punti") || 8);

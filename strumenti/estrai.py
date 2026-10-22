@@ -93,7 +93,10 @@ for nome, cos in SOLO_CANVA.items():
         SFONDI[nome] = cos
 for nome, cos in SFONDI.items():
     hd = file_hd(cos)
-    im = Image.open(hd).resize((1920, 1440), Image.LANCZOS) if hd else immagine("Stage", cos)[0]
+    im = Image.open(hd).convert("RGBA").resize((1920, 1440), Image.LANCZOS) if hd else immagine("Stage", cos)[0]
+    if hd and nome not in SOLO_CANVA and im.getchannel("A").getextrema()[0] < 255:
+        # alcuni file Canva sono solo la scritta su fondo trasparente: lo sfondo dello Scratch ce l'ha già
+        im = immagine("Stage", cos)[0].resize((1920, 1440), Image.LANCZOS)
     im.convert("RGB").save(cartella("sfondi", nome + ".jpg"), quality=86, optimize=True, progressive=True)
 
 # il report delle battaglie: tutte perse (stelle barrate) e tutte vinte, il gioco compone le altre

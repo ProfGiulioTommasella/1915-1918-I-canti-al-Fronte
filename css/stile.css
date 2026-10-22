@@ -11,6 +11,7 @@
   --titolo: "Black Ops One", "Alegreya", sans-serif;
   --testo: "Alegreya", Georgia, "Times New Roman", serif;
   --macchina: "Special Elite", "Courier New", monospace;
+  --trad: "Alegreya", Georgia, serif;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -173,7 +174,7 @@ body.battaglia #firma { display: none; }
 }
 
 /* ---------- Arruolamento ---------- */
-#arruolamento, #diario, #istruzioni, #finale {
+#arruolamento, #istruzioni, #finale {
   position: absolute;
   inset: 0;
   z-index: 30;
@@ -219,6 +220,19 @@ body.battaglia #firma { display: none; }
   background: rgba(255, 250, 230, 0.35);
 }
 #scelta-modo button.scelto { background: var(--inchiostro); color: var(--carta); border-color: var(--inchiostro); }
+#scelta-lingua { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin: -12px 0 24px; }
+#scelta-lingua .etichetta-gruppo { width: 100%; margin: 0 0 2px; }
+#scelta-lingua button {
+  font-family: var(--testo);
+  font-weight: 700;
+  font-size: 17px;
+  padding: 5px 13px;
+  border: 2px solid rgba(43, 33, 22, 0.5);
+  border-radius: 20px;
+  background: rgba(255, 250, 230, 0.35);
+}
+#scelta-lingua button:lang(zh) { font-family: var(--testo), "Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif; }
+#scelta-lingua button.scelto { background: var(--inchiostro); color: var(--carta); border-color: var(--inchiostro); }
 
 /* ---------- Dialoghi ---------- */
 #dialogo { position: absolute; inset: 0; z-index: 25; }
@@ -261,25 +275,6 @@ body.battaglia #firma { display: none; }
 #nuvola-testo { font-size: 30px; line-height: 1.35; flex: 1; min-height: 120px; }
 #nuvola-azioni { display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 14px; }
 #nuvola-azioni .grande { font-size: 24px; padding: 10px 28px 8px; }
-
-/* ---------- Diario di trincea ---------- */
-.foglio.diario { width: 860px; transform: rotate(0.6deg); padding: 34px 54px 30px; }
-.foglio.diario::before {
-  /* righe del quaderno */
-  content: "";
-  position: absolute;
-  inset: 90px 30px 80px;
-  background: repeating-linear-gradient(transparent 0 43px, rgba(80, 90, 130, 0.22) 43px 45px);
-  pointer-events: none;
-}
-.diario-testa { display: flex; justify-content: space-between; font-family: var(--macchina); font-size: 18px; opacity: 0.8; }
-.foglio.diario h2 { font-family: var(--titolo); font-weight: normal; font-size: 40px; margin: 14px 0 18px; }
-#diario-punti { position: relative; margin: 0 0 18px; padding-left: 28px; font-family: var(--macchina); font-size: 25px; line-height: 45px; }
-#diario-punti li { opacity: 0; animation: scrivi 0.6s ease-out forwards; }
-#diario-punti b { color: #6b1e14; font-weight: normal; text-decoration: underline; text-decoration-color: rgba(107, 30, 20, 0.4); text-underline-offset: 4px; }
-@keyframes scrivi { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
-.nota { font-family: var(--testo); font-size: 18px; opacity: 0.75; margin: 6px 0 18px; }
-.foglio.diario .grande { display: block; margin: 0 auto; }
 
 /* ---------- Domande ---------- */
 #quiz { position: absolute; inset: 0; z-index: 25; }
@@ -431,8 +426,10 @@ body.battaglia #firma { display: none; }
 #banner-piccolo { font-family: var(--macchina); font-size: 24px; color: #e9d8a8; max-width: 760px; margin: 0 auto; }
 #banner-grande { font-family: var(--titolo); font-size: 64px; letter-spacing: 3px; margin-top: 6px; }
 @keyframes comparsa { from { opacity: 0; transform: scale(1.15); } }
-#esito { position: absolute; inset: 0; z-index: 27; background: #000; }
-#esito-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; animation: zoom 3s ease-out forwards; }
+#esito { position: absolute; inset: 0; z-index: 27; background: #000 center / cover; }
+/* l'immagine intera (4:3, con la scritta dove l'ha messa lo Scratch) sopra una sua copia sfocata */
+#esito::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(14px) brightness(0.45); -webkit-backdrop-filter: blur(14px) brightness(0.45); }
+#esito-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; animation: zoom 3s ease-out forwards; }
 #esito-dati {
   position: absolute;
   left: 40px;
@@ -555,3 +552,62 @@ body.battaglia #firma { display: none; }
 @media (orientation: portrait) and (max-width: 900px) {
   #ruota { display: grid; }
 }
+
+/* ---------- Versione bilingue: traduzione sotto l'italiano ---------- */
+.trad {
+  display: block;
+  font-family: var(--trad);
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.25;
+  margin-top: 4px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.trad:lang(zh) {
+  font-family: "Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  font-style: normal;
+}
+.grande .trad { font-size: 16px; font-weight: 700; margin-top: 2px; }
+#arruolamento label .trad { font-size: 19px; color: #6b4a1a; }
+.etichetta-gruppo .trad { font-size: 14px; }
+#scelta-modo button .trad { font-size: 15px; margin-top: 2px; }
+.etichetta .trad { display: inline; margin-left: 6px; font-size: 12px; color: #a99a68; }
+#nuvola-chi .trad { display: inline; margin-left: 8px; font-size: 14px; }
+#nuvola-testo .trad { font-size: 22px; color: #6b4a1a; margin-top: 10px; }
+#quiz-categoria .trad { font-size: 15px; }
+#quiz-numero .trad { font-size: 14px; margin-top: 1px; }
+#quiz-domanda .trad { font-size: 21px; color: #6b4a1a; margin-top: 6px; }
+#quiz-scelte button .trad { font-size: 16px; color: #6b4a1a; margin-top: 2px; }
+#quiz-esito-titolo .trad { display: inline; margin-left: 8px; font-size: 16px; }
+#quiz-esito-testo .trad { font-size: 18px; color: #6b4a1a; }
+#quiz-munizioni-n .trad { font-size: 16px; }
+#grado-sopra .trad { font-size: 20px; }
+#grado-punti .trad { font-size: 18px; }
+#banner .trad { font-size: 20px; color: #e9d8a8; }
+#banner-grande .trad { font-size: 26px; margin-top: 0; }
+#esito-dati .trad { font-size: 16px; line-height: 1.2; margin: 0 0 6px; color: #e9d8a8; }
+#pan-battaglia .trad { font-size: 14px; margin-top: 0; }
+#pan-grado .trad { display: inline; margin-left: 4px; font-size: 13px; }
+#arma-stato .trad { font-size: 12px; margin-top: 0; }
+.istruzioni li .trad { font-size: 16px; color: #6b4a1a; margin-top: 1px; }
+.foglio h2 .trad, .foglio h3 .trad { font-size: 0.6em; }
+#finale-dati .trad { font-size: 16px; margin: 0 0 4px; }
+.cat h4 .trad { font-size: 13px; color: var(--inchiostro); }
+.cat li .trad, #finale-date .trad { font-size: 14px; color: #6b4a1a; margin-top: 1px; }
+#finale-date b .trad { font-size: 13px; }
+#finale-errori li .trad { font-size: 15px; color: #6b4a1a; }
+#ruota .trad { font-size: 0.8em; }
+/* con la traduzione le domande occupano più spazio: tutto un po' più compatto */
+.bilingue #quiz-nuvola { top: 84px; padding: 20px 30px 22px; }
+.bilingue #quiz-domanda { font-size: 27px; margin: 6px 0 16px; }
+.bilingue #quiz-scelte { gap: 10px; }
+.bilingue #quiz-scelte button { font-size: 21px; padding: 9px 14px; }
+.bilingue #quiz-esito { margin-top: 14px; padding-top: 10px; }
+.bilingue #quiz-esito-testo { font-size: 21px; }
+.bilingue #quiz-munizioni { left: auto; right: 24px; bottom: 16px; }
+.bilingue #quiz-munizioni-img { height: 84px; }
+.bilingue .foglio.istruzioni { padding-top: 22px; padding-bottom: 22px; }
+.bilingue .foglio.istruzioni h2 { font-size: 32px; margin-bottom: 6px; }
+.bilingue .foglio.istruzioni ol { font-size: 19px; line-height: 1.3; margin-bottom: 14px; }
+.bilingue .foglio.istruzioni li { margin-bottom: 6px; }

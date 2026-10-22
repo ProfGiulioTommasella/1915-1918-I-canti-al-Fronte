@@ -6,7 +6,7 @@
 window.CONTENUTI = {
   // ---------------------------------------------------------------
   //  Le 4 categorie dei canti: una per blocco di domande.
-  //  "scheda" è il Diario di trincea che si legge prima delle domande e nel ripasso finale.
+  //  "scheda" sono le caratteristiche della categoria, che si rivedono nel ripasso finale.
   // ---------------------------------------------------------------
   CATEGORIE: [
     {
@@ -229,7 +229,7 @@ window.CONTENUTI = {
   TESTI: {
     intro: [
       "Bene soldato {nome}, siete qui per testare le vostre conoscenze riguardo i Canti della Prima Guerra Mondiale.",
-      "Prima di ogni battaglia un soldato vi farà 4 domande su una categoria di canti: leggete bene il diario di trincea!",
+      "Prima di ogni battaglia un soldato vi farà 4 domande su una categoria di canti: tenete a mente quello che avete studiato!",
       "Ogni risposta giusta vi dà una munizione per l'Artiglieria o la Contraerea, e vi fa salire di grado.",
       "In battaglia toccate il cannone, puntate la zona da colpire e fate fuoco. I colpi arrivano dopo qualche secondo: mirate dove il nemico starà, non dove è adesso!",
       "Poi bisogna attendere la ricarica: mi raccomando, non sprecate le munizioni!",

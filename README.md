@@ -8,12 +8,10 @@ canti di **Esaltazione Patriottica**, di **Marcia e Intrattenimento**, di **Dolo
 
 Il gioco è diviso in **4 blocchi**, uno per categoria. In ogni blocco:
 
-1. si legge il **diario di trincea** con le caratteristiche della categoria (chi scriveva i canti,
-   il linguaggio, l'accompagnamento musicale, la melodia, il carattere);
-2. il soldato fa **4 domande** (a scelta multipla, oppure da scrivere come nello Scratch: si sceglie
-   all'arruolamento). Dopo ogni risposta il soldato spiega quella giusta;
-3. si vede il **grado** raggiunto (da Soldato semplice a Generale, 16 punti);
-4. si combatte la **battaglia**: carri armati nel 1° e 3° blocco, aerei nel 2° e 4°.
+1. il soldato fa **4 domande** sulla categoria (a scelta multipla, oppure da scrivere come nello Scratch:
+   si sceglie all'arruolamento). Dopo ogni risposta il soldato spiega quella giusta;
+2. si vede il **grado** raggiunto (da Soldato semplice a Generale, 16 punti);
+3. si combatte la **battaglia**: carri armati nel 1° e 3° blocco, aerei nel 2° e 4°.
    Le munizioni sono le risposte giuste del blocco (almeno una).
 
 In battaglia i mezzi nemici seguono i percorsi del progetto Scratch verso la nostra linea del fronte,
@@ -24,7 +22,7 @@ con **R** (o il pulsante ↻) la si ruota. Dopo ogni salva c'è la ricarica (il 
 Si vince se il fronte resiste fino alla fine del tempo o se nessun nemico resta in campo.
 
 Alla fine c'è il **report delle battaglie** (una stella per ogni battaglia vinta), il saluto
-dell'ufficiale secondo il grado e un **ripasso** con le 4 categorie, le date principali
+dell'ufficiale secondo il grado e un **ripasso** con le caratteristiche delle 4 categorie, le date principali
 e le domande sbagliate con la risposta giusta.
 
 ## Come si gioca
@@ -48,21 +46,30 @@ Dopo una modifica ai file in `js/` o `css/`, aumenta di uno il numero `?v=` nell
 di `index.html` che li caricano: così i browser scaricano subito la versione nuova
 invece di usare quella vecchia in memoria.
 
+## Versione bilingue
+
+Sul foglio di arruolamento si sceglie la lingua: solo italiano, oppure italiano con albanese (Shqip),
+spagnolo (Español) o cinese semplificato (中文); la scelta resta per le partite successive.
+Ogni testo resta in italiano e la traduzione compare subito sotto, più piccola. Le traduzioni sono in
+[`js/traduzioni.js`](js/traduzioni.js) (una bozza da far rivedere): la chiave è il testo italiano esatto,
+quindi se si cambia un testo in `js/contenuti.js` o in `index.html` va cambiata anche lì.
+Un testo senza traduzione compare solo in italiano. La risposta scritta va sempre data in italiano.
+
 ## Modificare domande e testi
 
-I contenuti stanno in [`js/contenuti.js`](js/contenuti.js): le schede del diario di trincea, le 16 domande
+I contenuti stanno in [`js/contenuti.js`](js/contenuti.js): le caratteristiche delle 4 categorie (per il ripasso), le 16 domande
 (con le risposte fra cui scegliere, le parole accettate nella risposta scritta e cosa dice il soldato),
 i gradi con il saluto finale dell'ufficiale, i dialoghi e le 4 battaglie (durata, resistenza del fronte,
 mezzi nemici con quantità, velocità e danno, come nello Scratch).
 I tempi del tiro (ritardo dei colpi, ricarica) si regolano in cima a [`js/gioco.js`](js/gioco.js).
 
 Per provare subito una parte: `index.html#blocco=3`, `index.html#battaglia=4&munizioni=2`,
-`index.html#report=1011` (battaglie vinte e perse), `index.html#finale&punti=13`.
+`index.html#report=1011` (battaglie vinte e perse), `index.html#finale&punti=13`;
+aggiungendo `&lingua=sq` (o `es`, `zh`) si prova anche la traduzione.
 
 ## Cosa cambia rispetto al progetto Scratch
 
-- Prima delle domande c'è il **diario di trincea** con le caratteristiche della categoria,
-  e alla fine il **ripasso** con le 4 categorie, le date e le risposte da rivedere.
+- Alla fine c'è il **ripasso** con le caratteristiche delle 4 categorie, le date e le risposte da rivedere.
 - Le domande si possono fare **a scelta multipla** (utile sul tablet) oppure **scritte** come nell'originale,
   e la risposta scritta è più tollerante (maiuscole, accenti e frasi intere: "erano canti di dolore!" va bene).
 - Il soldato spiega sempre la risposta giusta; corretta la spiegazione della 3ª domanda del 2° blocco.
@@ -72,7 +79,7 @@ Per provare subito una parte: `index.html#blocco=3`, `index.html#battaglia=4&mun
   la zona lampeggia con il conto alla rovescia dell'arrivo.
 - Pannello con linea del fronte, tempo, nemici rimasti, munizioni e ricarica.
 - Report delle battaglie, esito di ogni battaglia con i dati, gradi con promozione.
-- Grafiche in alta risoluzione dai file Canva, schermo intero, tablet e LIM.
+- Grafiche in alta risoluzione dai file Canva, schermo intero, tablet e LIM, versione bilingue.
 
 ## Struttura
 
@@ -80,6 +87,7 @@ Per provare subito una parte: `index.html#blocco=3`, `index.html#battaglia=4&mun
 index.html            pagina del gioco
 css/stile.css         grafica dell'interfaccia
 js/contenuti.js       domande, schede, gradi, testi e battaglie (da modificare liberamente)
+js/traduzioni.js      traduzioni per la versione bilingue
 js/grafica.js         misure delle immagini e percorsi dei mezzi (generato)
 js/gioco.js           motore di gioco
 assets/img/           sfondi, mezzi, gradi, personaggi e pulsanti (dal progetto Scratch e da Canva)
